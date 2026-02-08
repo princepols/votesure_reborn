@@ -56,6 +56,13 @@ ORDER BY FIELD(c.position,
 $stmt->execute([$election['id']]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Block access if there are no candidates for this election
+if (empty($rows)) {
+    $_SESSION['flash_message'] = ['type' => 'warning', 'message' => 'There are no candidates available.'];
+    header('Location: index.php?no_candidates=1');
+    exit;
+}
+
 // Group by position
 $byPosition = [];
 foreach ($rows as $r) {
@@ -150,7 +157,7 @@ if ($profile_missing) {
                     <select name="course" id="strand-select" class="form-select" required>
                         <option value="">Select Strand</option>
                         <option value="TVL" <?php if ($reg_course_main === 'TVL') echo 'selected'; ?>>TVL</option>
-                        <option value="AD" <?php if ($reg_course_main === 'AD') echo 'selected'; ?>>AD</option>
+                        <option value="AD" <?php if ($reg_course_main === 'AD') echo 'selected'; ?>>A&D</option>
                         <option value="ABM" <?php if ($reg_course_main === 'ABM') echo 'selected'; ?>>ABM</option>
                         <option value="HUMSS" <?php if ($reg_course_main === 'HUMSS') echo 'selected'; ?>>HUMSS</option>
                         <option value="STEM" <?php if ($reg_course_main === 'STEM') echo 'selected'; ?>>STEM</option>
@@ -318,8 +325,6 @@ if ($profile_missing) {
     flex-direction: column;
 }
 .abstain-card {
-    max-width: 220px;
-    margin: 0 auto;
     padding: 12px;
     border: 2px dashed #e0a0a0;
     background: #fff7f7;
@@ -389,6 +394,14 @@ if ($profile_missing) {
                 <li>Once submitted, your vote <b>cannot be changed</b>.</li>
             </ol>
 
+            <h5 class="fw-bold mt-4">VoteSure Team</h5>
+            <ul class="text-muted">
+                <li><b>Adrian Manuel Gaspe</b> | Project Lead</li>
+                <li><b>Prince Ryan Policianos</b> | Lead Developer</li>
+                <li><b>Mon Calix Lucena</b> | Associate Developer</li>
+                <li><b>Nathalie Suzynne Hemelian</b> | Research Analyst</li>
+            </ul>
+
             <div class="alert alert-warning mt-4">
                 <i class="fas fa-exclamation-triangle me-1"></i>
                 Make sure your selections are final before submitting.
@@ -436,25 +449,23 @@ if ($profile_missing) {
                     </label>
                 </div>
             <?php endforeach; ?>
-                <!-- Small abstain card placed below candidates -->
-                <div class="col-12">
-                    <div class="d-flex justify-content-center">
-                        <label class="w-auto">
-                            <input class="radio-hidden"
-                                   type="radio"
-                                   name="choice[<?= h($pos) ?>]"
-                                   value="0" checked>
-                            <div class="candidate-card abstain-card p-2 text-center selected">
-                                <div class="candidate-photo-wrapper">
-                                    <i class="fas fa-ban" title="No selection"></i>
-                                </div>
-                                <div class="card-content">
-                                    <div class="candidate-name">No selection</div>
-                                    <div class="candidate-party">Abstain / Skip</div>
-                                </div>
+                <!-- Abstain option aligned to the right -->
+                <div class="col-md-4 mb-3 ms-md-auto">
+                    <label class="w-100 h-100">
+                        <input class="radio-hidden"
+                               type="radio"
+                               name="choice[<?= h($pos) ?>]"
+                               value="0" checked>
+                        <div class="candidate-card abstain-card p-3 text-center h-100 selected">
+                            <div class="candidate-photo-wrapper">
+                                <i class="fas fa-ban" title="No selection"></i>
                             </div>
-                        </label>
-                    </div>
+                            <div class="card-content">
+                                <div class="candidate-name">No Selection</div>
+                                <div class="candidate-party">Abstain / Skip</div>
+                            </div>
+                        </div>
+                    </label>
                 </div>
             <?php endif; ?>
             </div>
@@ -573,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 
                 Swal.fire({
                     title: 'Are you sure you want to submit your vote?',
-                    text: 'this action cannot be undone.',
+                    text: 'This action cannot be undone.',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Submit Vote',

@@ -44,6 +44,17 @@ body{
   background-clip: padding-box;
 }
 
+/* Improved date contrast */
+.topbar .date-display {
+  color: white !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.15);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
 .brand { display:flex; align-items:center; gap:12px; font-weight:700; }
 .brand img{ height:48px; width:auto; border-radius:8px; background:rgba(255,255,255,0.04); padding:6px; }
 
@@ -112,13 +123,19 @@ footer.site-footer { margin-top:40px; padding:20px 0; text-align:center; color:v
 <div class="topbar">
   <div class="container d-flex align-items-center">
     <div class="brand">
-      <img src="/votesure_reborn/votesurelogo.png" alt="VoteSure">
+      <img src="../votesurelogo.png" alt="VoteSure logo">
       <div>
         <div style="font-size:18px">VoteSure</div>
         <div style="font-size:12px; opacity:0.9;">VoteSure Voting System</div>
       </div>
     </div>
-    <div class="ms-auto text-end small-muted"><?php echo date('F j, Y'); ?></div>
+
+    <div class="ms-auto">
+      <div class="date-display">
+        <i class="fas fa-calendar-alt me-2"></i><?php echo date('F j, Y'); ?>
+      </div>
+    </div>
+
   </div>
 </div>
 

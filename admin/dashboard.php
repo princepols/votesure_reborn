@@ -37,6 +37,21 @@ $recentElections = $pdo->query('SELECT id, title, status, start_date, end_date F
 include __DIR__ . '/header.php';
 ?>
 
+<?php if (!empty($_SESSION['admin_login_welcome'])): ?>
+<script>
+window.addEventListener('load', function () {
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      icon: 'success',
+      title: 'Welcome back, Administrator!',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+});
+</script>
+<?php $_SESSION['admin_login_welcome'] = 0; endif; ?>
+
 <style>
     /* 🎨 Theme Variables: Refined Palette */
     :root {

@@ -371,7 +371,7 @@ Swal.fire({
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>
-                        <th width="50">ID</th>
+                        <!--<th width="50">ID</th>-->
                         <th>Username</th>
                         <th>Password</th>
                         <!--<th>Password Hash</th>-->
@@ -382,7 +382,7 @@ Swal.fire({
                 <tbody>
                     <?php foreach ($admins as $a): ?>
                     <tr>
-                        <td><?= h($a['id']) ?></td>
+                        <!--<td><?= h($a['id']) ?></td>-->
                         <td>
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-user-circle me-2 text-muted"></i>

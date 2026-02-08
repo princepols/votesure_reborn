@@ -18,6 +18,20 @@ if (!$election) {
     die('No active election');
 }
 
+// Block submission if there are no candidates for the running election
+$candCountStmt = $pdo->prepare("
+    SELECT COUNT(*)
+    FROM candidates c
+    JOIN partylists p ON p.id = c.partylist_id
+    WHERE p.election_id = ?
+");
+$candCountStmt->execute([$election['id']]);
+$candCount = (int)$candCountStmt->fetchColumn();
+if ($candCount === 0) {
+    header('Location: index.php?no_candidates=1');
+    exit;
+}
+
 /* ================= PREVENT DOUBLE VOTE ================= */
 $chk = $pdo->prepare("SELECT id FROM votes WHERE student_id=? AND election_id=?");
 $chk->execute([$student_id, $election['id']]);

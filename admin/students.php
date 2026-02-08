@@ -13,7 +13,7 @@ $error = '';
 $success = '';
 
 // 2. Constants and Input Validation Helpers
-define('MAX_STUDENT_ID_LENGTH', 20); // Example max length
+define('MAX_STUDENT_ID_LENGTH', 9); // Exact length required
 define('MAX_NAME_LENGTH', 100);     // Example max length
 
 /**
@@ -36,7 +36,9 @@ function validate_input($input, $type = 'string') {
         return false;
     }
 
-    // You might add stricter pattern matching here (e.g., regex for student ID format)
+    if ($type === 'student_id' && !preg_match('/^\d{9}$/', $input)) {
+        return false;
+    }
 
     // Sanitize output for use in database (though PDO prepared statements handle escaping)
     return $input;
@@ -48,8 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = validate_input($_POST['student_id'] ?? '', 'student_id');
     $name = validate_input($_POST['name'] ?? '', 'name');
 
-    if (!$student_id || !$name) {
-        $error = "All fields are required and must be valid. Please check lengths.";
+    if (!$student_id) {
+        $error = "Student ID must be exactly 9 digits (numbers only).";
+    } elseif (!$name) {
+        $error = "Full name is required.";
     } else {
         // Use a function to check for existing student before inserting (optional but clearer)
         $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM students WHERE student_id = ?");
@@ -63,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $stmt->execute([$student_id, $name]);
                 // Set a session flash message for Post/Redirect/Get (PRG) pattern
-                $_SESSION['success_message'] = "Student ID **" . htmlspecialchars($student_id) . "** registered successfully!";
+                $_SESSION['success_message'] = "Student ID " . $student_id . " registered successfully!";
                 
                 // Redirect to avoid form resubmission on refresh
                 header('Location: ' . $_SERVER['REQUEST_URI']);
@@ -101,12 +105,20 @@ include __DIR__ . '/header.php';
 <div class="row">
     <div class="col-md-10 offset-md-1">
         
-        <?php if ($success): ?>
-            <div class="alert alert-success" role="alert"><?= $success ?></div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-danger" role="alert"><?= $error ?></div>
+        <?php if ($success || $error): ?>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const msg = <?php echo json_encode($error ?: $success); ?>;
+                const isError = <?php echo json_encode((bool)$error); ?>;
+                Swal.fire({
+                    icon: isError ? 'error' : 'success',
+                    title: isError ? 'Error' : 'Success',
+                    text: msg,
+                    confirmButtonColor: '#E67E22'
+                });
+            });
+            </script>
         <?php endif; ?>
 
         <div class="card card-modern p-4 mb-4">
@@ -114,7 +126,7 @@ include __DIR__ . '/header.php';
             <form method="POST" action="">
                 <div class="form-group mb-3">
                     <label for="student_id">Student ID:</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" required maxlength="<?= MAX_STUDENT_ID_LENGTH ?>">
+                    <input type="text" class="form-control" id="student_id" name="student_id" required maxlength="<?= MAX_STUDENT_ID_LENGTH ?>" pattern="\d{9}" inputmode="numeric" title="Student ID must be exactly 9 digits">
                 </div>
                 <div class="form-group mb-3">
                     <label for="name">Full Name:</label>

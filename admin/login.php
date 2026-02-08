@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verify password
     if ($admin && password_verify($password, $admin['password_hash'])) {
         $_SESSION['admin_id'] = $admin['id'];
+        $_SESSION['admin_login_welcome'] = 1;
         header('Location: dashboard.php');
         exit;
     } else {

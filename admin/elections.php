@@ -247,9 +247,10 @@ function confirmDelete(electionId, electionTitle) {
                         </div>
 
                         <div class="d-flex gap-2 align-items-center">
+                            <!--
                             <a class="btn btn-sm btn-outline-secondary" href="edit_election.php?id=<?php echo $r['id']; ?>">
                                 <i class="fas fa-edit"></i> Edit
-                            </a>
+                            </a>-->
 
                             <form method="post" data-election-id="<?php echo $r['id']; ?>" class="m-0">
                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">

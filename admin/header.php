@@ -523,7 +523,7 @@ $admin_role = $_SESSION['admin_role'] ?? 'Manage Everything.';
     <!-- Sidebar -->
     <div class="col-md-3 col-lg-2">
         <div class="sidebar d-flex flex-column">
-            <!-- Logo -->
+
 
 
             <!-- Admin Info -->
@@ -621,7 +621,7 @@ $admin_role = $_SESSION['admin_role'] ?? 'Manage Everything.';
                 
                 <!-- Logout Button -->
                 <div class="mt-2">
-                    <a class="nav-link text-danger" href="logout.php">
+                    <a class="nav-link text-danger" href="logout.php" id="logout-link">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="nav-text">Logout</span>
                     </a>
@@ -641,3 +641,24 @@ $admin_role = $_SESSION['admin_role'] ?? 'Manage Everything.';
 
             <!-- Content Body -->
             <div class="content-body">
+                <script>
+                window.addEventListener('load', function(){
+                  var link = document.getElementById('logout-link');
+                  if (!link) return;
+                  link.addEventListener('click', function(e){
+                    e.preventDefault();
+                    if (typeof Swal === 'undefined') { window.location.href = 'logout.php'; return; }
+                    Swal.fire({
+                      title: 'Are you sure you want to log out?',
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonText: 'Yes, Log Out',
+                      cancelButtonText: 'Cancel'
+                    }).then(function(res){
+                      if (res.isConfirmed) {
+                        window.location.href = 'logout.php';
+                      }
+                    });
+                  });
+                });
+                </script>

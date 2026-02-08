@@ -5,70 +5,111 @@ session_start();
 $page_title = 'Voter Station';
 $message = '';
 
+// Show candidate availability error via GET (e.g., redirected from vote.php)
+if (isset($_GET['no_candidates'])) {
+    $message = 'There are no candidates available.';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = trim($_POST['student_id'] ?? '');
 
     if ($student_id === '') {
         $message = 'Please enter or scan your Student ID.';
+    } elseif (!preg_match('/^\d{9}$/', $student_id)) {
+        $message = 'Student ID must be exactly 9 digits (numbers only).';
     } else {
         // Normalize student id
-        $student_id_trim = $student_id; // Keep as-is for exact matching
+        $student_id_trim = $student_id;
 
-        // AUTO-REGISTER: ensure registered_voters has this student_id
-        $stmt = $pdo->prepare('SELECT * FROM registered_voters WHERE student_id = ?');
-        $stmt->execute([$student_id_trim]);
-        $reg = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$reg) {
-            // Insert minimal record (name/course/year left null for user to complete)
-            $ins = $pdo->prepare('INSERT INTO registered_voters (student_id, student_name, course, year_level) VALUES (?, NULL, NULL, NULL)');
-            try {
-                $ins->execute([$student_id_trim]);
-            } catch (Exception $e) {
-                // ignore duplicate race condition
-            }
-        }
-
-        // Ensure students table has a row for this ID
-        $stmt2 = $pdo->prepare('SELECT * FROM students WHERE student_id = ?');
-        $stmt2->execute([$student_id_trim]);
-        $student = $stmt2->fetch(PDO::FETCH_ASSOC);
-
-        if (!$student) {
-            $ins2 = $pdo->prepare('INSERT INTO students (student_id, name, voted) VALUES (?, NULL, 0)');
-            try {
-                $ins2->execute([$student_id_trim]);
-            } catch (Exception $e) {
-                // ignore duplicate race condition
-            }
-            $student = ['student_id' => $student_id_trim, 'voted' => 0];
-        }
-
-        // Refresh student row in case it was created by another process
-        $stmt2->execute([$student_id_trim]);
-        $student = $stmt2->fetch(PDO::FETCH_ASSOC);
-
-        // CHECK IF AN ELECTION IS RUNNING (use authoritative check first)
+        // CHECK IF AN ELECTION IS RUNNING - AUTHORITATIVE CHECK
         $chkElection = $pdo->query(
             "SELECT id, title FROM elections WHERE status='running' LIMIT 1"
         )->fetch();
 
         if (!$chkElection) {
+            // CRITICAL FIX: Don't modify ANY database tables when no election is running
             $message = 'No election is currently running.';
         } else {
-            // CHECK votes table for this running election (authoritative)
             $election_id = $chkElection['id'];
-            $voteChk = $pdo->prepare("SELECT id, created_at FROM votes WHERE student_id = ? AND election_id = ?");
-            $voteChk->execute([$student_id_trim, $election_id]);
-            $existingVote = $voteChk->fetch();
-
-            if ($existingVote) {
-                $message = 'This student ID has already voted in the current election "' . $chkElection['title'] . '" on ' . $existingVote['created_at'] . '.';
+            
+            // Block if there are no candidates for the running election
+            $candCountStmt = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM candidates c 
+                JOIN partylists p ON p.id = c.partylist_id 
+                WHERE p.election_id = ?
+            ");
+            $candCountStmt->execute([$election_id]);
+            $candCount = (int)$candCountStmt->fetchColumn();
+            if ($candCount === 0) {
+                $message = 'There are no candidates available.';
             } else {
-                // All good → proceed
-                $_SESSION['voter_student_id'] = $student_id_trim;
-                header('Location: vote.php');
-                exit;
+                // AUTO-REGISTER: Only register when election is actually running and candidates exist
+                $stmt = $pdo->prepare('SELECT * FROM registered_voters WHERE student_id = ?');
+                $stmt->execute([$student_id_trim]);
+                $reg = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$reg) {
+                    try {
+                        $pdo->exec('CREATE TABLE IF NOT EXISTS available_voter_ids (id INT PRIMARY KEY)');
+                        $pdo->beginTransaction();
+                        $chkEmpty = $pdo->prepare('SELECT COUNT(*) AS c FROM registered_voters');
+                        $chkEmpty->execute();
+                        $countRow = $chkEmpty->fetch(PDO::FETCH_ASSOC);
+                        $isEmpty = isset($countRow['c']) && ((int)$countRow['c'] === 0);
+                        if ($isEmpty) {
+                            $assignId = 1;
+                            $pdo->exec('DELETE FROM available_voter_ids');
+                        } else {
+                            $selGap = $pdo->prepare('SELECT id FROM available_voter_ids ORDER BY id ASC LIMIT 1 FOR UPDATE');
+                            $selGap->execute();
+                            $gap = $selGap->fetch(PDO::FETCH_ASSOC);
+                            if ($gap) {
+                                $assignId = (int)$gap['id'];
+                                $delGap = $pdo->prepare('DELETE FROM available_voter_ids WHERE id = ?');
+                                $delGap->execute([$assignId]);
+                            } else {
+                                $selMax = $pdo->prepare('SELECT id FROM registered_voters ORDER BY id DESC LIMIT 1 FOR UPDATE');
+                                $selMax->execute();
+                                $maxRow = $selMax->fetch(PDO::FETCH_ASSOC);
+                                $assignId = $maxRow ? ((int)$maxRow['id'] + 1) : 1;
+                            }
+                        }
+                        $ins = $pdo->prepare('INSERT INTO registered_voters (id, student_id, student_name, course, year_level) VALUES (?, ?, NULL, NULL, NULL)');
+                        $ins->execute([$assignId, $student_id_trim]);
+                        $pdo->commit();
+                    } catch (Exception $e) {
+                        if ($pdo->inTransaction()) $pdo->rollBack();
+                    }
+                }
+
+                // Ensure students table has a row for this ID - ONLY when election is running AND candidates exist
+                $stmt2 = $pdo->prepare('SELECT * FROM students WHERE student_id = ?');
+                $stmt2->execute([$student_id_trim]);
+                $student = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+                if (!$student) {
+                    $ins2 = $pdo->prepare('INSERT INTO students (student_id, name, voted) VALUES (?, NULL, 0)');
+                    try {
+                        $ins2->execute([$student_id_trim]);
+                    } catch (Exception $e) {
+                        // ignore duplicate race condition
+                    }
+                }
+
+                // CHECK votes table for this running election
+                $voteChk = $pdo->prepare("SELECT id, created_at FROM votes WHERE student_id = ? AND election_id = ?");
+                $voteChk->execute([$student_id_trim, $election_id]);
+                $existingVote = $voteChk->fetch();
+
+                if ($existingVote) {
+                    $message = 'This student ID has already voted in the current election "' . $chkElection['title'] . '" on ' . $existingVote['created_at'] . '.';
+                } else {
+                    // All good → proceed
+                    $_SESSION['voter_student_id'] = $student_id_trim;
+                    header('Location: vote.php');
+                    exit;
+                }
             }
         }
     }
@@ -145,6 +186,10 @@ body { background-color: #ee7c12ff !important; }
                     <input class="form-control form-control-lg"
                            id="student_id"
                            name="student_id"
+                           inputmode="numeric"
+                           pattern="\d{9}"
+                           maxlength="9"
+                           title="Student ID must be exactly 9 digits"
                            autofocus
                            required
                            placeholder="Scan or type your Student ID here...">
