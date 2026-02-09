@@ -396,10 +396,10 @@ if ($profile_missing) {
 
             <h5 class="fw-bold mt-4">VoteSure Team</h5>
             <ul class="text-muted">
-                <li><b>Adrian Manuel Gaspe</b> | Project Lead</li>
-                <li><b>Prince Ryan Policianos</b> | Lead Developer</li>
-                <li><b>Mon Calix Lucena</b> | Associate Developer</li>
-                <li><b>Nathalie Suzynne Hemelian</b> | Research Analyst</li>
+                <li><b>Adrian Manuel Gaspe</b></li>
+                <li><b>Prince Ryan Policianos</b></li>
+                <li><b>Mon Calix Lucena</b></li>
+                <li><b>Nathalie Suzynne Hemelian</b></li>
             </ul>
 
             <div class="alert alert-warning mt-4">
