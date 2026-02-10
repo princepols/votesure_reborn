@@ -19,4 +19,11 @@ try { $pdo = new PDO("mysql:host={$DB_HOST};dbname={$DB_NAME};charset=utf8mb4", 
 
 function h($v){ return htmlspecialchars($v, ENT_QUOTES); }
 
+function app_base_url() {
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $dir1 = rtrim(dirname($script), '/');
+    $dir2 = rtrim(dirname($dir1), '/');
+    return $dir2 === '' ? '/' : $dir2;
+}
+
 ?>

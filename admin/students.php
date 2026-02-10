@@ -13,7 +13,7 @@ $error = '';
 $success = '';
 
 // 2. Constants and Input Validation Helpers
-define('MAX_STUDENT_ID_LENGTH', 9); // Exact length required
+define('MAX_STUDENT_ID_LENGTH', 50);
 define('MAX_NAME_LENGTH', 100);     // Example max length
 
 /**
@@ -36,9 +36,7 @@ function validate_input($input, $type = 'string') {
         return false;
     }
 
-    if ($type === 'student_id' && !preg_match('/^\d{9}$/', $input)) {
-        return false;
-    }
+    // No specific format required for student_id anymore
 
     // Sanitize output for use in database (though PDO prepared statements handle escaping)
     return $input;
@@ -51,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = validate_input($_POST['name'] ?? '', 'name');
 
     if (!$student_id) {
-        $error = "Student ID must be exactly 9 digits (numbers only).";
+        $error = "Student ID is required.";
     } elseif (!$name) {
         $error = "Full name is required.";
     } else {
@@ -126,7 +124,7 @@ include __DIR__ . '/header.php';
             <form method="POST" action="">
                 <div class="form-group mb-3">
                     <label for="student_id">Student ID:</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" required maxlength="<?= MAX_STUDENT_ID_LENGTH ?>" pattern="\d{9}" inputmode="numeric" title="Student ID must be exactly 9 digits">
+                    <input type="text" class="form-control" id="student_id" name="student_id" required maxlength="<?= MAX_STUDENT_ID_LENGTH ?>">
                 </div>
                 <div class="form-group mb-3">
                     <label for="name">Full Name:</label>

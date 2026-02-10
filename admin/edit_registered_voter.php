@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $course = trim($_POST['course'] ?? '');
     $year_level = trim($_POST['year_level'] ?? '');
 
-    if (!preg_match('/^\d{9}$/', $student_id)) {
-        $error = 'Student ID must be exactly 9 digits (numbers only).';
+    if ($student_id === '') {
+        $error = 'Student ID is required.';
     } elseif ($student_name === '') {
         $error = 'Name is required.';
     } else {
@@ -67,7 +67,7 @@ include __DIR__ . '/header.php';
   <form method="post" action="">
     <div class="mb-3">
       <label for="student_id" class="form-label">Student ID</label>
-      <input type="text" class="form-control" id="student_id" name="student_id" required maxlength="9" pattern="\d{9}" inputmode="numeric" title="Student ID must be exactly 9 digits" value="<?php echo htmlspecialchars($voter['student_id']); ?>">
+      <input type="text" class="form-control" id="student_id" name="student_id" required value="<?php echo htmlspecialchars($voter['student_id']); ?>">
     </div>
 
     <div class="mb-3">

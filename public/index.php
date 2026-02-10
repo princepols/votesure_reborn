@@ -15,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($student_id === '') {
         $message = 'Please enter or scan your Student ID.';
-    } elseif (!preg_match('/^\d{9}$/', $student_id)) {
-        $message = 'Student ID must be exactly 9 digits (numbers only).';
     } else {
         // Normalize student id
         $student_id_trim = $student_id;
@@ -186,10 +184,6 @@ body { background-color: #ee7c12ff !important; }
                     <input class="form-control form-control-lg"
                            id="student_id"
                            name="student_id"
-                           inputmode="numeric"
-                           pattern="\d{9}"
-                           maxlength="9"
-                           title="Student ID must be exactly 9 digits"
                            autofocus
                            required
                            placeholder="Scan or type your Student ID here...">
