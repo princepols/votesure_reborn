@@ -433,7 +433,7 @@ if ($profile_missing) {
                                 <div class="candidate-photo-wrapper">
                                     <?php if ($c['photo'] && file_exists(__DIR__.'/../uploads/'.$c['photo'])): ?>
                                         <img class="candidate-photo" 
-                                             src="/votesure_reborn/uploads/<?= h($c['photo']) ?>" 
+                                             src="/uploads/<?= h($c['photo']) ?>" 
                                              alt="<?= h($c['name']) ?>"
                                              onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22100%22%20height%3D%22100%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23f8f9fa%22/%3E%3Ctext%20x%3D%2250%22%20y%3D%2250%22%20font-family%3D%22Arial%22%20font-size%3D%2214%22%20fill%3D%22%236c757d%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3EImage%3C/text%3E%3C/svg%3E';">
                                     <?php else: ?>
