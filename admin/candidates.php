@@ -24,7 +24,7 @@ $POSITIONS = [
 ];
 
 $upload_dir = __DIR__ . '/../uploads/';
-$upload_url = app_base_url() . '/uploads/';
+$upload_url = '/votesure_reborn/uploads/';
 
 if (!file_exists($upload_dir)) {
     mkdir($upload_dir, 0755, true);

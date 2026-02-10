@@ -138,7 +138,6 @@ $total_voters = count($votes);
 
 $page_title = 'Election Results';
 include __DIR__ . '/header.php';
-$upload_url = app_base_url() . '/uploads/';
 ?>
 
 <div class="results-wrapper" style="max-width:1000px; margin:auto; padding:20px;">
